@@ -1,0 +1,39 @@
+{
+  "name": "@liveinference/auth-adapter",
+  "version": "1.0.0",
+  "description": "next-auth adapter",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liveinference/auth-adapter.git"
+  },
+  "keywords": [
+    "live",
+    "inference",
+    "nextjs",
+    "next-auth",
+    "adapter"
+  ],
+  "author": "Sam Wen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/liveinference/auth-adapter/issues"
+  },
+  "homepage": "https://github.com/liveinference/auth-adapter#readme",
+  "dependencies": {
+    "@liveinference/core-sdk": "^1.0.1",
+    "next-auth": "^4.24.5"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.3.101",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}
