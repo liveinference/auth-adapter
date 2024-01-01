@@ -1,6 +1,6 @@
 {
   "name": "@liveinference/auth-adapter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "next-auth adapter",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/liveinference/auth-adapter#readme",
   "dependencies": {
-    "@liveinference/core-sdk": "^1.0.1",
+    "@liveinference/core-sdk": "^1.0.4",
     "next-auth": "^4.24.5"
   },
   "devDependencies": {

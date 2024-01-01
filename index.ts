@@ -10,41 +10,46 @@ import type {
 import { getServerClient } from "@liveinference/core-sdk";
 import type * as types from "@liveinference/core-sdk";
 
-export default function authAdapter(client?: types.ServerClient, options: any = {}) : Adapter {
-  if (!client) {
-    client = getServerClient(options.apiKey, options.apiBaseUrl) as types.ServerClient;
-  }
+export default function authAdapter(
+  inputClient?: types.ServerClient, 
+  options: any = {}
+) : Adapter {
+
+  const client = inputClient || getServerClient(options.apiKey, options.apiBaseUrl);
+  
   return {
-    async createUser(user: AdapterUser) {
+    async createUser(user: Omit<AdapterUser, "id">) {
       const body = convertAuthUser(user);
       const { data } = await client.
         request('/api/v1/user', {method: 'POST', body});
-      return convertApiUser(data);
+      return convertApiUser(data) as AdapterUser;
     },
     async getUser(id: string) {
       const { data, error } = await client.
-        request('/api/v1/user/' + id);
+        request('/api/v1/user/' + id, {method: 'GET'});
       if (!data || error) return null;
       return convertApiUser(data);
     },
     async getUserByEmail(email: string) {
       const { data, error } = await client.
-        request('/api/v1/user/by-email/' + email);
+        request('/api/v1/user/by-email/' + email, {method: 'GET'});
       if (!data || error) return null;
       return convertApiUser(data);
     },
     async getUserByAccount({ providerAccountId, provider }: { providerAccountId: string, provider: string }) {
       const { data, error } = await client.
-        request('/api/v1/user/by-account/' + provider + '/' + providerAccountId);
+        request('/api/v1/user/by-account/' + provider + '/' + providerAccountId, {method: 'GET'});
       if (!data || error) return null;
       return convertApiUser(data);
     },
-    async updateUser(user: AdapterUser) {
+    async updateUser(user: Partial<AdapterUser> & Pick<AdapterUser, "id">) {
       const body = convertAuthUser(user);
       const { data, error } = await client.
         request('/api/v1/user/' + user.id, {method: 'PUT', body});
-      if (!data || error) return null;
-      return convertApiUser(data);
+      if (!data || error) {
+        throw new Error(error?.message || "updateUser failed");
+      }
+      return convertApiUser(data) as AdapterUser;
     },
     async deleteUser(userId: string) {
       await client.request('/api/v1/user/' + userId, {method: 'DELETE'});
@@ -69,14 +74,15 @@ export default function authAdapter(client?: types.ServerClient, options: any = 
       if (!data || error) {
         throw new Error(error?.message || "createSession failed");
       }
-      const { expires: returnedExpires } = convertApiSession(data);
+      const { expires: returnedExpires } = convertApiSession(data) || {};
       return { sessionToken, expires: returnedExpires } as AdapterSession;
     },
     async getSessionAndUser(sessionToken : string) {
       const { data, error } = await client.
-        request('/api/v1/user/session/' + sessionToken);
+        request('/api/v1/user/session/' + sessionToken, {method: 'GET'});
       if (!data || error) return null;
-      const { expires, user } = convertApiSession(data);
+      const { expires, user } = convertApiSession(data) || {};
+      if (!user) return null;
       const session = { sessionToken, expires } as AdapterSession;
       return { session, user };
     },
@@ -85,7 +91,7 @@ export default function authAdapter(client?: types.ServerClient, options: any = 
       const { data } = await client.
         request('/api/v1/user/session/' + sessionToken, 
           {method: 'PUT', body});
-        const { expires } = convertApiSession(data);
+        const { expires } = convertApiSession(data) || {};
         return { sessionToken, expires } as AdapterSession;
     },
     async deleteSession(sessionToken : string) {
@@ -124,8 +130,8 @@ function convertAuthUser(data: any) {
   return { ...rest, username, emailVerifiedAt, phoneVerifiedAt };
 }
 
-function convertApiUser(data: any): AdapterUser {
-  if (!data) return;
+function convertApiUser(data: any): AdapterUser | null {
+  if (!data) return null;
   const {
     username: name, 
     emailVerifiedAt, 
@@ -152,8 +158,8 @@ function convertApiUser(data: any): AdapterUser {
   return result;
 }
 
-function convertApiSession(data: any) : { expires: Date, user: AdapterUser } {
-  if (!data) return;
+function convertApiSession(data: any) : { expires: Date, user: AdapterUser } | null {
+  if (!data) return null;
   if (data.expires) {
     data.expires = new Date(data.expires);
   }
